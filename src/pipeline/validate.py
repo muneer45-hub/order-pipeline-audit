@@ -30,13 +30,19 @@ class Reject(NamedTuple):
 
 
 def parse_timestamp(text):
-    """Strict ISO-8601 UTC (YYYY-MM-DDTHH:MM:SSZ) or None."""
-    if not TS_PATTERN.match(text):
-        return None
-    try:
-        return datetime.strptime(text, TS_FORMAT).replace(tzinfo=timezone.utc)
-    except ValueError:
-        return None
+       """Strict ISO-8601 UTC (YYYY-MM-DDTHH:MM:SSZ) or None.
+
+       The regex fixes the layout, so the parts are sliced out directly. This is much
+       faster than strptime. datetime() still rejects impossible dates such as month 13.
+       """
+       if not TS_PATTERN.match(text):
+           return None
+       try:
+           return datetime(int(text[0:4]), int(text[5:7]), int(text[8:10]),
+                           int(text[11:13]), int(text[14:16]), int(text[17:19]),
+                           tzinfo=timezone.utc)
+       except ValueError:
+           return None
 
 
 def parse_price_cents(text):

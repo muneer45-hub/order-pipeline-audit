@@ -51,6 +51,8 @@ All curated tables carry `run_id` and `source_file` and `source_row_number` for 
 - `dim_products`: latest valid version of each product
 - `fact_orders`: latest valid version of each order, plus derived `line_total = quantity * unit_price`
 - `order_status_history`: append-only log of every status change (history is preserved, not overwritten)
+   - Money is stored as integer cents (`list_price_cents`, `unit_price_cents`, `line_total_cents`) so
+     sums reconcile exactly; the CSV inputs carry decimal prices with at most 2 decimals.
 
 ## 5. Audit tables
 - `pipeline_runs`: run_id, status (running/success/failed), started_at, ended_at, rows_read, rows_loaded, rows_rejected, failure_reason
@@ -78,3 +80,43 @@ All curated tables carry `run_id` and `source_file` and `source_row_number` for 
 
 ## 10. How this would map to Azure
 - (to be completed at the end)
+
+## 11. Performance
+
+**Setup:** 106,118 input rows (5,055 customers, 508 products, 100,555 orders, about 5% deliberately
+bad) generated with seed 42, loaded into a fresh SQLite database on a Windows laptop
+(Python 3.13). Reproduce with `python scripts/compare_optimizations.py --input-dir data/large`.
+
+**Method:** I profiled first (`python scripts/benchmark.py --input-dir data/large --profile`)
+instead of guessing. Profiling showed validation as the biggest Python cost, with
+`datetime.strptime` called about 200,000 times (two timestamps per order), and SQLite batch
+inserts as the other large cost. I then compared variants in one process, interleaving the
+runs (round 1 of every variant, then round 2, and so on) so machine noise affects all
+variants equally. Each variant ran 3 times.
+
+| Variant | Median | Best | Speedup |
+|---|---|---|---|
+| Baseline | 16.99 s | 15.23 s | 1.00x |
+| A: 64 MB SQLite page cache (`PRAGMA cache_size`) | 12.01 s | 11.74 s | 1.41x |
+| B: slice-based timestamp parsing instead of `strptime` | 12.70 s | 12.35 s | 1.34x |
+| A + B (shipped) | 8.82 s | 8.77 s | 1.93x |
+
+Row counts were identical for every variant (read 106,118; loaded 100,843; rejected 5,275),
+and all 27 tests pass with the optimizations on.
+
+**Why these two:**
+- B removes redundant work. The regex has already fixed the timestamp layout, so building the
+  `datetime` directly gives the same result without the slow `strptime` machinery. `datetime()`
+  still rejects impossible dates such as month 13.
+- A is motivated by random key order. Orders arrive shuffled, so inserts touch random pages of
+  several indexes, and SQLite's default cache is small, so pages get evicted and reloaded.
+  The measured gain is consistent with that explanation, but I did not isolate the cause with
+  a separate cache-miss measurement.
+
+**Limits of these measurements:** 3 runs per variant on one laptop; run-to-run noise was about
++/-2 s, which is why variants were interleaved and compared by median. Throughput after
+optimization is roughly 12,000 rows/s.
+
+**Next optimization ideas (not done):** validate with vectorised or batched checks, drop the
+`raw_record` JSON for accepted rows (already the case) and insert rejects in bulk, process the
+input in chunks to cap memory, and parallelise independent files.

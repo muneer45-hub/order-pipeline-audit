@@ -118,12 +118,13 @@ CREATE INDEX IF NOT EXISTS idx_rejected_run_reason ON rejected_records(run_id, r
 
 
 def connect(db_path):
-    """Open the SQLite database (creating its folder) with foreign keys enforced."""
-    path = Path(db_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+       """Open the SQLite database (creating its folder) with foreign keys enforced."""
+       path = Path(db_path)
+       path.parent.mkdir(parents=True, exist_ok=True)
+       conn = sqlite3.connect(path)
+       conn.execute("PRAGMA foreign_keys = ON")
+       conn.execute("PRAGMA cache_size = -65536")  # 64 MB page cache (negative = KiB)
+       return conn
 
 
 def init_db(conn):
