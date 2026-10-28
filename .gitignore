@@ -220,3 +220,4 @@ __marimo__/
 .streamlit/secrets.toml
 data/large/
 data/large_expected/
+output/
