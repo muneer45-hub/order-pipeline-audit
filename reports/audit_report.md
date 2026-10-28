@@ -3,8 +3,8 @@
 ## Run history (last 10 runs)
 | run_id | status | started_at | ended_at | read | loaded | rejected | failure |
 |---|---|---|---|---|---|---|---|
-| run_20261028T075536Z_d66ec9 | success | 2026-10-28T07:55:36Z | 2026-10-28T07:55:36Z | 431 | 410 | 21 |  |
-| run_20261028T075707Z_c19e16 | success | 2026-10-28T07:57:07Z | 2026-10-28T07:57:07Z | 0 | 0 | 0 |  |
+| run_20261028T121653Z_6de57f | success | 2026-10-28T12:16:53Z | 2026-10-28T12:16:53Z | 431 | 410 | 21 |  |
+| run_20261028T121705Z_6bed2a | success | 2026-10-28T12:17:05Z | 2026-10-28T12:17:05Z | 0 | 0 | 0 |  |
 
 ## Files in the latest run
 | source_file | status | read | loaded | rejected | failure |
@@ -32,9 +32,9 @@
 ## Lineage: output rows per source file and run
 | table | source_file | run_id | rows |
 |---|---|---|---|
-| dim_customers | customers.csv | run_20261028T075536Z_d66ec9 | 95 |
-| dim_products | products.csv | run_20261028T075536Z_d66ec9 | 29 |
-| fact_orders | orders.csv | run_20261028T075536Z_d66ec9 | 286 |
+| dim_customers | customers.csv | run_20261028T121653Z_6de57f | 95 |
+| dim_products | products.csv | run_20261028T121653Z_6de57f | 29 |
+| fact_orders | orders.csv | run_20261028T121653Z_6de57f | 286 |
 
 ## Key aggregates: orders by status
 | order_status | orders | revenue |

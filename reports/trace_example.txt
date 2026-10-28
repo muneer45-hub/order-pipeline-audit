@@ -1,0 +1,9 @@
+﻿Order O00000003  status=cancelled  customer=C000045  product=P00023
+  quantity=7  unit_price_cents=9339  line_total_cents=65373
+Loaded from:
+  file      orders.csv  (row 230)
+  path      data\sample\orders.csv
+  checksum  94210f8c9245ab7884da225e2a5afa48006dffe6fda25e3754d1f49a3dd9b7d0
+  run       run_20261028T121653Z_6de57f  started 2026-10-28T12:16:53Z
+Status history:
+  2026-06-08T14:29:52Z  cancelled  orders.csv row 230  (run_20261028T121653Z_6de57f)
