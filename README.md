@@ -130,7 +130,7 @@ scripts/        generate_data.py, benchmark.py, compare_optimizations.py
 tests/          pytest suite
 data/sample/    committed starter data;  data/sample_expected/  answer key (separate)
 reports/        generated audit report and trace example
-DESIGN.md       design note, data dictionary, trade-offs, performance, Azure mapping
+DESIGN.md design note, data dictionary, assumptions, trade-offs, performance
 AI_USAGE.md     how AI was used;  PROMPTS.md  full prompt history
 ```
 
@@ -175,7 +175,7 @@ Full reasoning is in [DESIGN.md](DESIGN.md). In short:
 ## Possible next steps
 
 Chunked and parallel file processing, batched validation, a run lock, a schema-evolution policy
-(for example accept new optional columns), alerting on failed runs, and an Azure deployment
+(for example accept new optional columns), alerting on failed runs, and a cloud deployment (for example Azure Data Factory with ADLS Gen2).
 (see the mapping in DESIGN.md).
 
 ## AI use

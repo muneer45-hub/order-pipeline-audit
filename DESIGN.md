@@ -73,15 +73,38 @@ All curated tables carry `run_id` and `source_file` and `source_row_number` for 
 - Rerun of the same file (same checksum): skipped and logged, so no duplicates are created.
 
 ## 8. Assumptions
-- (to be completed as I build)
+- - Input files are UTF-8 CSV with a header row whose columns match the expected order exactly.
+  Any other header is treated as a schema change and the file fails (see tests).
+- All timestamps are UTC in `YYYY-MM-DDTHH:MM:SSZ` form; anything else is `invalid_timestamp`.
+- `updated_at` from the source is trustworthy and decides which version of a record is newest.
+- IDs follow fixed formats (C + 6 digits, P + 5 digits, O + 8 digits).
+- Prices have at most 2 decimals. `unit_price` is the price charged at order time and is not
+  compared with the product's current `list_price`.
+- Customers and products are reference data and are loaded before orders. An order whose
+  customer or product is not valid is rejected, not loaded.
+- Each file is a batch of full records. Deletions are not modelled.
+- "In the future" for `order_ts` means later than the moment the run started.
+- Data is synthetic; no personal or real data is used.
 
 ## 9. Trade-offs and limitations
-- (to be completed at the end)
+- - **SQLite instead of a server database.** Zero setup and runnable anywhere, which the task asks for,
+  but only one writer at a time and no lock against two simultaneous runs.
+- **Standard-library `csv` instead of pandas.** Fewer dependencies and exact row numbers for every
+  reject (traceability), but slower than vectorised validation. This is the main performance
+  limit (see the Performance section).
+- **One reject reason per row.** Rules are checked in a fixed order and the first failure wins.
+  Deterministic and easy to test, but a row with two problems shows only one.
+- **Idempotency by file checksum.** Simple and safe for reruns. A corrected file with different
+  content counts as new; its rows are then protected by the `updated_at` comparison.
+- **One transaction per file, not per run.** A failure affects only that file and a retry resumes
+  where it stopped. The cost is that a run can end with some files loaded and some failed, which
+  the run status (`failed`) and per-file status make visible.
+- **Stale rows are quarantined, not merged into history.** Prevents silent overwrites, but an older
+  version of an order that arrives late is not preserved in `order_status_history`.
+- **Each file is read fully into memory.** Fine for 100k+ rows; a much larger file needs chunking.
+- **Timings** come from three interleaved runs on one laptop and are indicative, not a benchmark.
 
-## 10. How this would map to Azure
-- (to be completed at the end)
-
-## 11. Performance
+## 10. Performance
 
 **Setup:** 106,118 input rows (5,055 customers, 508 products, 100,555 orders, about 5% deliberately
 bad) generated with seed 42, loaded into a fresh SQLite database on a Windows laptop
