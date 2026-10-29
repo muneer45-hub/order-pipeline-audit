@@ -154,7 +154,7 @@ Full reasoning is in [DESIGN.md](DESIGN.md). In short:
 - **Retry / restart:** run the same command again. Already loaded files are skipped by checksum,
   failed files are processed again. A run left as `running` (process killed) is flagged by the
   `no_interrupted_runs` check.
-- - **Backfill:** put older data in a new folder and run with `--input-dir`. Rows older than what is
+- **Backfill:** put older data in a new folder and run with `--input-dir`. Rows older than what is
   already loaded cannot overwrite newer ones; they are quarantined as `stale_update` (not applied,
   not added to history). Every version that is applied is kept in `order_status_history`.
 
@@ -167,12 +167,11 @@ Full reasoning is in [DESIGN.md](DESIGN.md). In short:
   new, and its rows are protected by `updated_at` comparison, not by file name.
 - Deletions in the source are not detected (the model is insert and update only).
 - Order status history is keyed by `(order_id, updated_at)`, so two different statuses with the
+  same timestamp keep only the first.
 - Late-arriving older versions of an order are quarantined, not merged into its status history, so
   the history only contains versions that were applied.
-  same timestamp keep only the first.
 - The "order date is in the future" rule uses the time the run started.
 - Timings come from three runs on one laptop and are indicative only.
-
 ## Possible next steps
 
 Chunked and parallel file processing, batched validation, a run lock, a schema-evolution policy
